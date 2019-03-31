@@ -1,0 +1,10 @@
+[package]
+name = "auto-clippy"
+version = "0.1.0"
+authors = ["James Graves <james.c.graves.jr@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+diesel = { version = "1.0.0", features = ["sqlite"] }
+git2 = "0.8"
+rustfix = { git = "https://github.com/rust-lang-nursery/rustfix", branch = "master" }
