@@ -6,11 +6,11 @@ Automatically find and fix problems in the Rust code ecosystem.
 
 [design]: docs/Design_Overview.md
 
-# Prerequesites
+# Prerequisites
 
 Debian / Ubuntu:
 
 ```
-apt-get install libsqlite3-dev
+apt-get install aspell libsqlite3-dev
 ```
 

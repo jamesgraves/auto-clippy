@@ -10,7 +10,7 @@ software ecosystem in as automated a fashion as possible.
 * Clone software repos, and pull updates when available.
 * Scan source code using Rust's clippy and other tools.
     * Update database on new problems found, and old problems that have disappeared.
-* Run spelling and grammer checks on documentation, for human review.
+* Run spelling and grammar checks on documentation, for human review.
 * Create fixes for problems found when possible using rustfix.
     * Create new appropriately-named branch.
     * Group related fixes together in a single commit and push.
@@ -22,4 +22,10 @@ software ecosystem in as automated a fashion as possible.
 * Support all source code sharing and CI sites (github, gitlab, bitbucket, etc.).
 * Allow multiple instances to be run in parallel.
     * All work status updates managed through the database.
-    * Support distributed databases for even greater scaling.
+
+Future Improvements
+===================
+
+* Use ML trained on existing bug fixes to help identify issues in code.
+* Support distributed databases for even greater scaling.
+* Use ML to suggest a summary comment for functions that don't have any comments.
