@@ -8,12 +8,12 @@ Automatically find and fix problems in the Rust code ecosystem.
 
 # Prerequisites
 
-*aspell and sqlite3*
+*pkg-config, gcc, libssl, aspell and sqlite3*
 
 Debian / Ubuntu:
 
 ```
-sudo apt install aspell libsqlite3-dev
+sudo apt install pkg-config gcc libssl-dev aspell libsqlite3-dev
 ```
 
 *[Diesel ORM](http://diesel.rs/)*
