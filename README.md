@@ -13,7 +13,7 @@ Automatically find and fix problems in the Rust code ecosystem.
 Debian / Ubuntu:
 
 ```
-sudo apt-get install aspell libsqlite3-dev
+sudo apt install aspell libsqlite3-dev
 ```
 
 *[Diesel ORM](http://diesel.rs/)*
