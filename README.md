@@ -15,11 +15,3 @@ Debian / Ubuntu:
 ```
 sudo apt-get install aspell libsqlite3-dev
 ```
-
-*[Diesel ORM](http://diesel.rs/)*
-
-```
-cargo install diesel_cli --no-default-features --features sqlite
-diesel setup
-diesel migration run
-```

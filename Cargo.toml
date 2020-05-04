@@ -5,7 +5,7 @@ authors = ["James Graves <james.c.graves.jr@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-diesel = { version = "1.0.0", features = ["sqlite"] }
+rusqlite = "0.23.1"
 git2 = "0.8"
 ispell = "0.3"
 rustfix = { git = "https://github.com/rust-lang-nursery/rustfix", branch = "master" }
