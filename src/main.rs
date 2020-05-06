@@ -1,6 +1,8 @@
 // #[macro_use]
 extern crate structopt;
 
+mod database;
+
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -82,6 +84,8 @@ fn dispatch_subcommand(opt: Opt) -> Result<usize, RuntimeError> {
 }
 
 fn main() {
+    database::init().expect("Failed to initialize database");
+
     let opt = Opt::from_args();
     let cmd_result = dispatch_subcommand(opt);
     match cmd_result {
