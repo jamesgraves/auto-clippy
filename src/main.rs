@@ -6,16 +6,23 @@ mod database;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "auto-clippy")]
-/// Automatically find and fix Rust code issues.
-enum Opt {
-    #[structopt(name = "init")]
-    /// Initialize local database and check prerequisites.
-    Init {
-        #[structopt(short = "d", default_value = "sqlite")]
-        database: String,
-    },
+struct Opt {
+    #[structopt(short = "q", long = "quiet")]
+    /// Quiet, only print errors
+    quiet: bool,
 
+    #[structopt(short = "v", long = "version")]
+    /// Print version number
+    version: bool,
+
+    #[structopt(subcommand)]
+    /// Subcommands
+    subcommand: Option<Cmd>,
+}
+
+#[derive(StructOpt, Debug)]
+/// Automatically find and fix Rust code issues.
+enum Cmd {
     #[structopt(name = "add")]
     /// Add Rust software source repositories for checking.
     Add { urls: Vec<String> },
@@ -41,19 +48,17 @@ enum Opt {
         /// Verbose mode (-v, -vv, -vvv, etc.).
         #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
         verbose: u8,
-
-        #[structopt(short = "q", long = "quiet")]
-        /// Don't print anything except errors.
-        quiet: bool,
     },
 
     #[structopt(name = "remove")]
     /// Remove Rust software source repositories from being checked.
-    Remove { urls: Vec<String> },
+    Remove { 
+        #[structopt(short = "p", long = "purge")]
+        /// Delete everything associated with the URLs, including previous status.
+        purge: bool,
 
-    #[structopt(name = "purge")]
-    /// Delete all data associated with with a repository.
-    Purge { urls: Vec<String> },
+        urls: Vec<String>,
+    },
 }
 
 #[derive(Debug)]
@@ -62,35 +67,58 @@ pub enum RuntimeError {
     LocalError,
 }
 
-fn dispatch_subcommand(opt: Opt) -> Result<usize, RuntimeError> {
-    match opt {
-        Opt::Init { database } => println!("init {:?}", database),
-        Opt::Add { urls } => println!("add {:?}", urls),
-        Opt::Status { verbose } => println!("status {:?}", verbose),
-        Opt::Run {
-            check_only,
-            dry_run,
-            verbose,
-            quiet,
-        } => println!(
-            "run {:?} {:?} {:?} {:?}",
-            check_only, dry_run, verbose, quiet
-        ),
-        Opt::Remove { urls } => println!("remove {:?}", urls),
-        Opt::Purge { urls } => println!("purge {:?}", urls),
-    }
-
+fn add_urls(urls: &[String]) -> Result<usize, RuntimeError> {
+    println!("add {:?}", urls);
     Ok(0)
+}
+
+fn status(verbose: bool) -> Result<usize, RuntimeError> {
+    println!("status, verbose: {}", verbose);
+    Ok(0)
+}
+
+fn remove_urls(purge: bool, urls: &[String]) -> Result<usize, RuntimeError> {
+    if purge {
+        println!("also purge");
+    }
+    println!("remove {:?}", urls);
+    Ok(0)
+}
+
+fn batch_run(check_only: bool, dry_run: bool, verbose: u8) -> Result<usize, RuntimeError> {
+    println!("run {:?} {:?} {:?}", check_only, dry_run, verbose);
+    Ok(0)
+}
+
+fn dispatch_subcommand(opt: Opt) -> Result<usize, RuntimeError> {
+    if opt.version {
+        println!("version");
+        Ok(0)
+    } else {
+        match opt.subcommand {
+            Some(cmd) => {
+                match cmd {
+                    Cmd::Add { urls } => add_urls(&urls),
+                    Cmd::Status { verbose } => status(verbose),
+                    Cmd::Remove { purge, urls } => remove_urls(purge, &urls),
+                    Cmd::Run { check_only, dry_run, verbose, } => batch_run(check_only, dry_run, verbose)
+                }
+            },
+            None => status(false),
+        }
+    }
 }
 
 fn main() {
     database::init().expect("Failed to initialize database");
 
     let opt = Opt::from_args();
-    let cmd_result = dispatch_subcommand(opt);
-    match cmd_result {
+    let quiet = opt.quiet;
+    match dispatch_subcommand(opt) {
         Ok(count) => {
-            println!("items processed: {}", count);
+            if ! quiet {
+                println!("items processed: {}", count);
+            }
         }
         Err(err) => {
             println!("error: {:?} ", err);
