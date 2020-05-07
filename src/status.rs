@@ -1,20 +1,28 @@
 // extern crate rusqlite;
 
-// use rusqlite::{Connection, Result};
-// use rusqlite::NO_PARAMS;
+use rusqlite::{Connection, NO_PARAMS};
 // use rusqlite::params;
 use anyhow::Result;
+use super::database;
 
-fn verbose_statistics() -> Result<()> {
-    println!("verbose statistics");
+fn verbose_statistics(_conn: &Connection) -> Result<()> {
     Ok(())
 }
 
 pub fn statistics(verbose: bool) -> Result<usize> {
+
+    let conn = database::open()?;
+
     if verbose {
-        verbose_statistics()?;
+        verbose_statistics(&conn)?;
     }
-    println!("statistics");
+
+    let count: isize =  conn.query_row(
+        "SELECT count(url) FROM repo",
+        NO_PARAMS,
+        |row| row.get(0),
+        )?;
+    println!("project count: {}", count);
     Ok(0)
 }
 
