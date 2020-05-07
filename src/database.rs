@@ -13,10 +13,14 @@ static SCHEMA_UPDATE_LIST: [&str; 1] = [
                 )",
     ];
 
-pub fn init() -> Result<(), rusqlite::Error> {
+pub fn open() -> rusqlite::Result<rusqlite::Connection> {
+    Connection::open("auto-clippy.sqlite3")
+}
+
+pub fn init() -> rusqlite::Result<()> {
 
     // Creates DB file if it doesn't exist.
-    let conn = Connection::open("auto-clippy.sqlite3")?;
+    let conn = open()?;
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS schema_updates (

@@ -2,7 +2,12 @@
 extern crate structopt;
 
 mod database;
+mod status;
+mod error;
+mod repos;
+mod clippy;
 
+use error::RuntimeError;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -61,35 +66,6 @@ enum Cmd {
     },
 }
 
-#[derive(Debug)]
-pub enum RuntimeError {
-    NetworkError,
-    LocalError,
-}
-
-fn add_urls(urls: &[String]) -> Result<usize, RuntimeError> {
-    println!("add {:?}", urls);
-    Ok(0)
-}
-
-fn status(verbose: bool) -> Result<usize, RuntimeError> {
-    println!("status, verbose: {}", verbose);
-    Ok(0)
-}
-
-fn remove_urls(purge: bool, urls: &[String]) -> Result<usize, RuntimeError> {
-    if purge {
-        println!("also purge");
-    }
-    println!("remove {:?}", urls);
-    Ok(0)
-}
-
-fn batch_run(check_only: bool, dry_run: bool, verbose: u8) -> Result<usize, RuntimeError> {
-    println!("run {:?} {:?} {:?}", check_only, dry_run, verbose);
-    Ok(0)
-}
-
 fn dispatch_subcommand(opt: Opt) -> Result<usize, RuntimeError> {
     if opt.version {
         println!("version");
@@ -98,13 +74,13 @@ fn dispatch_subcommand(opt: Opt) -> Result<usize, RuntimeError> {
         match opt.subcommand {
             Some(cmd) => {
                 match cmd {
-                    Cmd::Add { urls } => add_urls(&urls),
-                    Cmd::Status { verbose } => status(verbose),
-                    Cmd::Remove { purge, urls } => remove_urls(purge, &urls),
-                    Cmd::Run { check_only, dry_run, verbose, } => batch_run(check_only, dry_run, verbose)
+                    Cmd::Add { urls } => repos::add_urls(&urls),
+                    Cmd::Status { verbose } => status::statistics(verbose),
+                    Cmd::Remove { purge, urls } => repos::remove_urls(purge, &urls),
+                    Cmd::Run { check_only, dry_run, verbose, } => clippy::batch_run(check_only, dry_run, verbose)
                 }
             },
-            None => status(false),
+            None => status::statistics(false),
         }
     }
 }
