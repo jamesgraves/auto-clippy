@@ -1,8 +1,8 @@
 extern crate rusqlite;
 
-use rusqlite::{Connection, Result};
-use rusqlite::NO_PARAMS;
-use rusqlite::params;
+use rusqlite::{Connection, NO_PARAMS, params};
+
+use anyhow::Result;
 
 // List of schema updates
 static SCHEMA_UPDATE_LIST: [&str; 1] = [
@@ -13,11 +13,12 @@ static SCHEMA_UPDATE_LIST: [&str; 1] = [
                 )",
     ];
 
-pub fn open() -> rusqlite::Result<rusqlite::Connection> {
-    Connection::open("auto-clippy.sqlite3")
+pub fn open() -> Result<rusqlite::Connection> {
+    let conn = Connection::open("auto-clippy.sqlite3")?;
+    Ok(conn)
 }
 
-pub fn init() -> rusqlite::Result<()> {
+pub fn init() -> Result<()> {
 
     // Creates DB file if it doesn't exist.
     let conn = open()?;
@@ -33,7 +34,7 @@ pub fn init() -> rusqlite::Result<()> {
     for update in SCHEMA_UPDATE_LIST.iter() {
         // if this update exists in schema_updates, skip
         // otherwise run it to update on-disk database schema to match latest version.
-        let result: Result<String> = conn.query_row(
+        let result: rusqlite::Result<String> = conn.query_row(
             "SELECT schema_update FROM schema_updates WHERE schema_update = ?1",
             params![update],
             |row| row.get(0),

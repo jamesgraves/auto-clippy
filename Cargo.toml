@@ -10,3 +10,4 @@ git2 = "0.8"
 ispell = "0.3"
 rustfix = { git = "https://github.com/rust-lang-nursery/rustfix", branch = "master" }
 structopt = "0.2"
+anyhow = "1.0"

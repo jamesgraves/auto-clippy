@@ -3,12 +3,11 @@ extern crate structopt;
 
 mod database;
 mod status;
-mod error;
 mod repos;
 mod clippy;
 
-use error::RuntimeError;
 use structopt::StructOpt;
+use anyhow::Result;
 
 #[derive(StructOpt, Debug)]
 struct Opt {
@@ -66,7 +65,7 @@ enum Cmd {
     },
 }
 
-fn dispatch_subcommand(opt: Opt) -> Result<usize, RuntimeError> {
+fn dispatch_subcommand(opt: Opt) -> Result<usize> {
     if opt.version {
         println!("version");
         Ok(0)

@@ -3,14 +3,14 @@
 // use rusqlite::{Connection, Result};
 // use rusqlite::NO_PARAMS;
 // use rusqlite::params;
-use super::error::RuntimeError;
+use anyhow::Result;
 
-fn verbose_statistics() -> Result<(), RuntimeError> {
+fn verbose_statistics() -> Result<()> {
     println!("verbose statistics");
     Ok(())
 }
 
-pub fn statistics(verbose: bool) -> Result<usize, RuntimeError> {
+pub fn statistics(verbose: bool) -> Result<usize> {
     if verbose {
         verbose_statistics()?;
     }
