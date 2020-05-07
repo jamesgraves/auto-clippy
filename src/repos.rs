@@ -8,7 +8,7 @@ use super::error::RuntimeError::InvalidArgument;
 
 
 pub fn add_urls(urls: &[String]) -> Result<usize, RuntimeError> {
-    if urls.len() < 1 {
+    if urls.is_empty() {
         return Err(InvalidArgument)
     }
     println!("add {:?}", urls);
@@ -16,6 +16,9 @@ pub fn add_urls(urls: &[String]) -> Result<usize, RuntimeError> {
 }
 
 pub fn remove_urls(purge: bool, urls: &[String]) -> Result<usize, RuntimeError> {
+    if urls.is_empty() {
+        return Err(InvalidArgument)
+    }
     if purge {
         println!("also purge");
     }

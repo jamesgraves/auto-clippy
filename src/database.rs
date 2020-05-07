@@ -44,7 +44,7 @@ pub fn init() -> rusqlite::Result<()> {
                 conn.execute(update, NO_PARAMS)?;
                 conn.execute("INSERT INTO schema_updates (schema_update) VALUES (?1)",
                     params![update])?;
-                updates_applied = updates_applied + 1;
+                updates_applied += 1;
             },
         }
     }
