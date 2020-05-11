@@ -6,9 +6,12 @@
 use anyhow::{Result, anyhow};
 
 static COMMON_HOSTING_SITES: [&str; 3] = [
+    "beanstalkapp.com",
+    "bitbucket.org",
     "github.com",
     "gitlab.com",
-    "bitbucket.com",
+    "launchpad.net",
+    "sourceforge.net",
 ];
 
 fn canonicalize_repo(repo: &mut String) {
