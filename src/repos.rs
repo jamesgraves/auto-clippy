@@ -1,11 +1,6 @@
-// extern crate rusqlite;
-
-// use rusqlite::{Connection, Result};
-// use rusqlite::NO_PARAMS;
-// use rusqlite::params;
 use anyhow::{Result, anyhow};
 
-static COMMON_HOSTING_SITES: [&str; 3] = [
+static COMMON_HOSTING_SITES: [&str; 6] = [
     "beanstalkapp.com",
     "bitbucket.org",
     "github.com",
