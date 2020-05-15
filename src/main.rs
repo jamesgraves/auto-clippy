@@ -96,7 +96,7 @@ fn main() {
             }
         }
         Err(err) => {
-            println!("error: {:?} ", err);
+            eprintln!("error: {:?} ", err);
             std::process::exit(1);
         }
     }
