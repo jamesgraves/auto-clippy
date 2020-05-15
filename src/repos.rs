@@ -1,3 +1,4 @@
+use super::database;
 use anyhow::{Result, anyhow};
 
 static COMMON_HOSTING_SITES: [&str; 6] = [
@@ -25,6 +26,7 @@ pub fn add_urls(urls: &[String]) -> Result<usize> {
     let mut m_urls = urls.to_owned();
     for url in m_urls.iter_mut() {
         canonicalize_repo(url);
+        database::set_repo_status(url, "new")?;
         println!("url {}", url);
     }
 
