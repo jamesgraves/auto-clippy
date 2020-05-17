@@ -26,7 +26,7 @@ pub fn add_urls(urls: &[String]) -> Result<usize> {
     let mut m_urls = urls.to_owned();
     for url in m_urls.iter_mut() {
         canonicalize_repo(url);
-        database::set_repo_status(url, "new")?;
+        database::set_repo_status(url, "new", true)?;
         println!("url {}", url);
     }
 
@@ -41,12 +41,14 @@ pub fn remove_urls(purge: bool, urls: &[String]) -> Result<usize> {
     let mut m_urls = urls.to_owned();
     for url in m_urls.iter_mut() {
         canonicalize_repo(url);
+        if purge {
+            database::delete_repo(url)?;
+        } else {
+            database::set_repo_status(url, "disabled", false)?;
+        }
         println!("url {}", url);
     }
 
-    if purge {
-        println!("also purge");
-    }
     Ok(urls.len())
 }
 

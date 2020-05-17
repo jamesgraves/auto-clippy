@@ -59,24 +59,41 @@ pub fn init() -> Result<()> {
     Ok(())
 }
 
+
 // Set the current status for a repo.
 // Inserts new repo record if needed.
-pub fn set_repo_status(url: &str, status: &str) -> Result<()> {
+pub fn set_repo_status(url: &str, status: &str, insert_missing: bool) -> Result<()> {
     let conn = open()?;
 
     let update_count = conn.execute("UPDATE repo SET fetch_status = ?2 WHERE url = ?1",
                               params![url, status])?;
     if update_count == 1 {
-        return Ok(()); // found it, updated
+        return Ok(());
+    }
+    if insert_missing == false {
+        return Err(anyhow!(format!("failed to update url: {} with status: {}", url, status)));
     }
 
     // url was not found.
     let insert_result = conn.execute("INSERT INTO repo (url, last_fetch, fetch_status) VALUES (?1, '', ?2)",
                               params![url, status])?;
     if insert_result == 1 {
-        return Ok(()); // found it, updated
+        Ok(())
+    } else {
+        Err(anyhow!(format!("failed to insert url: {} with status: {}", url, status)))
     }
+}
 
-    Err(anyhow!("unable to update url table"))
+// Delete a repo.
+pub fn delete_repo(url: &str) -> Result<()> {
+    let conn = open()?;
+
+    let remove_count = conn.execute("DELETE FROM repo WHERE url = ?1",
+                              params![url])?;
+    if remove_count == 1 {
+        Ok(())
+    } else {
+        Err(anyhow!(format!("failed to delete url: {}", url)))
+    }
 }
 
