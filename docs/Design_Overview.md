@@ -26,6 +26,7 @@ software ecosystem in as automated a fashion as possible.
 Future Improvements
 ===================
 
+* Fix old pre-NLL code that needed workarounds (such as additional scopes).  Assuming that it is safe to update to using NLL.  If some component is already dependent upon a post-NLL compiler release, for example.
 * Use ML trained on existing bug fixes to help identify issues in code.
 * Support distributed databases for even greater scaling.
 * Use ML to suggest a summary comment for functions that don't have any comments.
