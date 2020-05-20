@@ -43,3 +43,4 @@ Ideas That Probably Should Be Separate Projects
 * Look for unmaintained crate dependencies, and suggest maintained crates to replace them.
     * Automatically update deps, run unit tests to see if it works.
     * Pull in API tests from old crate to the replacement if missing, to ensure interface contract?
+    * Use ML to examine trends in other codebases.  If others have replaced crate `A` with crate `B`, suggest the same.
