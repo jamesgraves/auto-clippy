@@ -4,12 +4,18 @@ use rusqlite::{Connection, NO_PARAMS, params};
 
 use anyhow::{Result, anyhow};
 
+// statuses:
+//
+// new
+// disabled
+// error: fetch_failed - last fetch failed for some reason.
+
 // List of schema updates
 static SCHEMA_UPDATE_LIST: [&str; 1] = [
         "CREATE TABLE repo (
                 url TEXT UNIQUE NOT NULL,
-                last_fetch TEXT NOT NULL,
-                fetch_status TEXT NOT NULL
+                status TEXT NOT NULL,
+                reference_count INTEGER NOT NULL
                 )",
     ];
 
@@ -25,6 +31,8 @@ pub fn init() -> Result<()> {
 
     // Creates DB file if it doesn't exist.
     let conn = open()?;
+
+    // TODO: transactions
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS schema_updates (
@@ -44,11 +52,16 @@ pub fn init() -> Result<()> {
             );
         match result {
             Ok(_found_update) => continue,
-            Err(_err) => {
-                conn.execute(update, NO_PARAMS)?;
-                conn.execute("INSERT INTO schema_updates (schema_update) VALUES (?1)",
-                    params![update])?;
-                updates_applied += 1;
+            Err(err) => {
+                match err {
+                    rusqlite::Error::QueryReturnedNoRows => {
+                        conn.execute(update, NO_PARAMS)?;
+                        conn.execute("INSERT INTO schema_updates (schema_update) VALUES (?1)",
+                        params![update])?;
+                        updates_applied += 1;
+                    },
+                    _ => return Err(anyhow!("database error")),
+                }
             },
         }
     }
@@ -59,28 +72,16 @@ pub fn init() -> Result<()> {
     Ok(())
 }
 
-
-// Set the current status for a repo.
-// Inserts new repo record if needed.
-pub fn set_repo_status(url: &str, status: &str, insert_missing: bool) -> Result<()> {
+// Add repo with given reference count.
+pub fn add_repo(url: &str, reference_count: isize) -> Result<()> {
     let conn = open()?;
 
-    let update_count = conn.execute("UPDATE repo SET fetch_status = ?2 WHERE url = ?1",
-                              params![url, status])?;
-    if update_count == 1 {
-        return Ok(());
-    }
-    if insert_missing == false {
-        return Err(anyhow!(format!("failed to update url: {} with status: {}", url, status)));
-    }
-
-    // url was not found.
-    let insert_result = conn.execute("INSERT INTO repo (url, last_fetch, fetch_status) VALUES (?1, '', ?2)",
-                              params![url, status])?;
+    let insert_result = conn.execute("INSERT INTO repo (url, status, reference_count) VALUES (?1, 'new', ?2)",
+                              params![url, reference_count])?;
     if insert_result == 1 {
         Ok(())
     } else {
-        Err(anyhow!(format!("failed to insert url: {} with status: {}", url, status)))
+        Err(anyhow!(format!("failed to insert url: {} with ref count: {}", url, reference_count)))
     }
 }
 
@@ -96,4 +97,75 @@ pub fn delete_repo(url: &str) -> Result<()> {
         Err(anyhow!(format!("failed to delete url: {}", url)))
     }
 }
+
+
+pub fn url_exists(url: &str) -> Result<bool> {
+    let conn = open()?;
+
+    let result: rusqlite::Result<i64> = conn.query_row(
+        "SELECT 1 FROM repo WHERE url = ?1",
+        params![url],
+        |row| row.get(0),
+        );
+
+    match result {
+        Ok(_found) => Ok(true),
+        Err(err) => {
+            match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(false),
+                _ => Err(anyhow!("database error")),
+            }
+        }
+    }
+}
+
+
+// Set the current status for a repo.
+pub fn set_repo_status(url: &str, status: &str) -> Result<()> {
+    let conn = open()?;
+
+    let update_count = conn.execute("UPDATE repo SET status = ?2 WHERE url = ?1",
+                              params![url, status])?;
+    if update_count == 1 {
+        return Ok(());
+    } else {
+        return Err(anyhow!(format!("failed to update url: {} with status: {}", url, status)));
+    }
+}
+
+/*
+// Adjust reference count for a URL.
+pub fn adjust_reference_count(url: &str, adjustment: isize) -> Result<isize> {
+    let conn = open()?;
+    let tx = conn.transaction()?;
+
+    let mut curr_rc: i64;
+
+    // shorten?
+    let result: rusqlite::Result<i64> = tx.query_row(
+        "SELECT reference_count FROM repo WHERE url = ?1",
+        params![url],
+        |row| row.get(0),
+        );
+    match result {
+        Ok(rc) => curr_rc = rc,
+        Err(err) => return Err(anyhow!(format!("failed to get ref count for: {}", url))),
+    }
+
+    curr_rc += adjustment;
+    if curr_rc < 0 {
+        curr_rc = 0;
+    }
+
+    let update_count = conn.execute("UPDATE repo SET reference_count = ?2 WHERE url = ?1",
+                              params![url, curr_rc])?;
+    tx.commit();
+    if update_count == 1 {
+        return Ok(());
+    } else {
+        return Err(anyhow!(format!("failed to update url: {} with ref count adjustment: {}", url, adjustment)));
+    }
+}
+*/
+
 

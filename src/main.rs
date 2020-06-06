@@ -11,55 +11,79 @@ use anyhow::Result;
 
 #[derive(StructOpt, Debug)]
 struct Opt {
-    #[structopt(short = "q", long = "quiet")]
-    /// Quiet, only print errors
-    quiet: bool,
 
-    #[structopt(short = "v", long = "version")]
     /// Print version number
+    #[structopt(short, long)]
     version: bool,
 
-    #[structopt(subcommand)]
     /// Subcommands
+    #[structopt(subcommand)]
     subcommand: Option<Cmd>,
 }
 
-#[derive(StructOpt, Debug)]
 /// Automatically find and fix Rust code issues.
+#[derive(StructOpt, Debug)]
 enum Cmd {
-    #[structopt(name = "add")]
-    /// Add Rust software source repositories for checking.
-    Add { urls: Vec<String> },
 
-    #[structopt(name = "status")]
-    /// Show check status for all monitored source code repositories.
-    Status {
-        #[structopt(short = "v")]
-        verbose: bool,
+    /// Add Rust software source repositories for checking.
+    #[structopt(name = "add")]
+    Add {
+
+        /// Recursively add library dependencies up to depth N, 0 means none.
+        #[structopt(short, long, default_value = "0")]
+        recursive: usize,
+
+        urls: Vec<String>,
     },
 
-    #[structopt(name = "run")]
-    /// Start checking the repositories and fixing things.
-    Run {
-        #[structopt(short = "c", long = "check-only")]
-        /// Don't try to fix anything or create pull requests.
-        check_only: bool,
+    /// Show check status for all monitored source code repositories.
+    #[structopt(name = "status")]
+    Status {
 
-        #[structopt(long = "dry-run")]
+        /// Increased detail level
+        #[structopt(short, long)]
+        detail: bool,
+    },
+
+    /// Start checking the repositories and fixing things.
+    #[structopt(name = "run")]
+    Run {
+
         /// Don't pull anything, only print what would be done.
+        #[structopt(long)]
         dry_run: bool,
 
-        /// Verbose mode (-v, -vv, -vvv, etc.).
+        /// Run N jobs in parallel, default is number of cores.
+        #[structopt(short, long, default_value = "0")]
+        jobs: usize,
+
+        /// Quiet, only print errors
+        #[structopt(short, long)]
+        quiet: bool,
+
+        /// Verbose mode, repeat for increasing detail (-v, -vv, -vvv).
         #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
         verbose: u8,
     },
 
+    /// Don't run checks on previously added repos.
+    #[structopt(name = "disable")]
+    Disable {
+
+        /// Recursively disable library dependencies up to depth N, 0 means none.
+        #[structopt(short, long, default_value = "0")]
+        recursive: usize,
+
+        urls: Vec<String>,
+    },
+
+    /// Remove Rust software source repositories from local storage.
     #[structopt(name = "remove")]
-    /// Remove Rust software source repositories from being checked.
-    Remove { 
-        #[structopt(short = "p", long = "purge")]
-        /// Delete everything associated with the URLs, including previous status.
-        purge: bool,
+    Remove {
+
+        /// Recursively remove library dependencies up to depth N, 0 means none.
+        #[structopt(short, long, default_value = "0")]
+        recursive: usize,
 
         urls: Vec<String>,
     },
@@ -73,10 +97,11 @@ fn dispatch_subcommand(opt: Opt) -> Result<usize> {
         match opt.subcommand {
             Some(cmd) => {
                 match cmd {
-                    Cmd::Add { urls } => repos::add_urls(&urls),
-                    Cmd::Status { verbose } => status::statistics(verbose),
-                    Cmd::Remove { purge, urls } => repos::remove_urls(purge, &urls),
-                    Cmd::Run { check_only, dry_run, verbose, } => clippy::batch_run(check_only, dry_run, verbose)
+                    Cmd::Add { recursive, urls } => repos::add_urls(recursive, &urls),
+                    Cmd::Status { detail } => status::statistics(detail),
+                    Cmd::Disable { recursive, urls } => repos::disable_urls(recursive, &urls),
+                    Cmd::Remove { recursive, urls } => repos::remove_urls(recursive, &urls),
+                    Cmd::Run { dry_run, jobs, quiet, verbose } => clippy::batch_run(dry_run, jobs, quiet, verbose),
                 }
             },
             None => status::statistics(false),
@@ -88,13 +113,11 @@ fn main() {
     database::init().expect("Failed to initialize database");
 
     let opt = Opt::from_args();
-    let quiet = opt.quiet;
     match dispatch_subcommand(opt) {
         Ok(count) => {
-            if ! quiet {
-                println!("items processed: {}", count);
-            }
-        }
+            // TODO: quiet
+            println!("repos processed: {}", count);
+        },
         Err(err) => {
             eprintln!("error: {:?} ", err);
             std::process::exit(1);
