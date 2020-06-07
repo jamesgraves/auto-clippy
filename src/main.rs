@@ -7,7 +7,7 @@ mod repos;
 mod clippy;
 
 use structopt::StructOpt;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 #[derive(StructOpt, Debug)]
 struct Opt {
@@ -109,8 +109,27 @@ fn dispatch_subcommand(opt: Opt) -> Result<usize> {
     }
 }
 
+fn init_repos_dir() -> Result<()> {
+    use std::fs;
+
+    match fs::metadata("repos") {
+        Ok(metadata) => if metadata.is_dir() {
+            return Ok(());
+        } else {
+            return Err(anyhow!("repos exists but is not a directory."));
+        },
+        Err(_err) => {
+            fs::create_dir("repos")?;
+        },
+    }
+
+    Ok(())
+}
+
 fn main() {
     database::init().expect("Failed to initialize database");
+
+    init_repos_dir().expect("Failed to create repos directory");
 
     let opt = Opt::from_args();
     match dispatch_subcommand(opt) {
