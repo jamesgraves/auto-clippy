@@ -2,6 +2,7 @@ use super::database;
 use anyhow::{Result, anyhow};
 
 static USER_ADDED_REFCOUNT: isize = 1000000;
+static REPOS_DIR: &str = "repos";
 
 /*
 static COMMON_HOSTING_SITES: [&str; 6] = [
@@ -55,6 +56,7 @@ fn _add_urls(recursive: usize, urls: &[String], reference_count: isize) -> Resul
             count += 1;
             println!("added: {}", url);
         }
+
         // let refcount = database::adjust_reference_count(url, reference_count)?;
         if recursive > 0 {
             // generate list of dependent crates
@@ -99,9 +101,40 @@ pub fn remove_urls(recursive: usize, urls: &[String]) -> Result<usize> {
             count += 1;
             println!("removed: {}", url);
             // TODO: remove on-disk
+            // generate list of dependent crates
         }
     }
 
     Ok(count)
 }
 
+
+pub fn init_repos_dir() -> Result<()> {
+    use std::fs;
+
+    match fs::metadata(REPOS_DIR) {
+        Ok(metadata) => if metadata.is_dir() {
+            return Ok(());
+        } else {
+            return Err(anyhow!("repos exists but is not a directory."));
+        },
+        Err(_err) => {
+            fs::create_dir(REPOS_DIR)?;
+        },
+    }
+
+    Ok(())
+}
+
+
+// TODO: Use OS independent path manipulation.
+/*
+fn setup_repo_dir(url: &str) -> Result<&str> {
+    let last_dir_sep = url.rfind("/");
+    if let Some(last_dir_sep_idx) = last_dir_sep {
+        let base_dir, _ = url.split_at(last_dir_sep_idx);
+    }
+
+    Ok(&url[..0])
+}
+*/
