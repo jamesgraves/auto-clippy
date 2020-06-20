@@ -68,6 +68,10 @@ fn _add_urls(recursive: usize, urls: &[String], reference_count: isize) -> Resul
 }
 
 pub fn disable_urls(recursive: usize, urls: &[String]) -> Result<usize> {
+    _disable_urls(recursive, urls, -1 * USER_ADDED_REFCOUNT)
+}
+
+fn _disable_urls(recursive: usize, urls: &[String], _reference_count: isize) -> Result<usize> {
     let mut count: usize = 0;
     println!("recursive: {}", recursive);
     if urls.is_empty() {
@@ -80,6 +84,8 @@ pub fn disable_urls(recursive: usize, urls: &[String]) -> Result<usize> {
             database::set_repo_status(url, "disabled")?;
             count += 1;
             println!("disabled: {}", url);
+            // generate list of dependent crates
+            // count += _add_urls(recursive - 1, new_urls, -1)?;
         }
     }
 
