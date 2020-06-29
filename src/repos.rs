@@ -1,5 +1,7 @@
 use super::database;
 use anyhow::{Result, anyhow};
+use std::string::String;
+use git2::Repository;
 
 static USER_ADDED_REFCOUNT: isize = 1000000;
 static REPOS_DIR: &str = "repos";
@@ -28,10 +30,18 @@ fn add_https(repo: String) -> String{
 /// Skips http:// or https:// from url.
 fn skip_http_https(repo: &str) -> &str {
     if repo.starts_with("http://") {
-        return &repo[6..];
+        return &repo[7..];
     }
     if repo.starts_with("https://") {
-        return &repo[7..];
+        return &repo[8..];
+    }
+    repo
+}
+
+fn elide_dot_git(repo: &str) -> &str {
+    if repo.ends_with(".git") {
+        let len = repo.len();
+        return &repo[..(len - 4)];
     }
     repo
 }
@@ -50,11 +60,25 @@ fn _add_urls(recursive: usize, urls: &[String], reference_count: isize) -> Resul
 
     for url in urls.iter() {
         let url = skip_http_https(url);
+        let url = elide_dot_git(url);
         if ! database::url_exists(url)? {
             database::add_repo(url, reference_count)?;
             database::set_repo_status(url, "new")?;
             count += 1;
-            println!("added: {}", url);
+            if let Some(idx) = url.rfind("/") {
+                let (repo_parent_dir, _) = url.split_at(idx);
+                let (_, repo_name) = url.split_at(idx + 1);
+                // TODO: Use OS independent path manipulation.
+                let repo_parent_dir = format!("{}/{}", REPOS_DIR, &repo_parent_dir);
+                std::fs::create_dir_all(&repo_parent_dir)?;
+                let full_url = format!("https://{}.git", url);
+                let repo = Repository::clone(&full_url, &repo_parent_dir)?;
+                println!("added and cloned: {}    {}", repo_parent_dir, repo_name);
+                if repo.is_bare() {
+                    println!("bare?");
+                }
+            }
+
         }
 
         // let refcount = database::adjust_reference_count(url, reference_count)?;
@@ -116,24 +140,12 @@ pub fn remove_urls(recursive: usize, urls: &[String]) -> Result<usize> {
 
 
 pub fn init_repos_dir() -> Result<()> {
-    use std::fs;
-
-    match fs::metadata(REPOS_DIR) {
-        Ok(metadata) => if metadata.is_dir() {
-            return Ok(());
-        } else {
-            return Err(anyhow!("repos exists but is not a directory."));
-        },
-        Err(_err) => {
-            fs::create_dir(REPOS_DIR)?;
-        },
-    }
-
+    std::fs::create_dir(REPOS_DIR)?;
     Ok(())
 }
 
 
-// TODO: Use OS independent path manipulation.
+
 /*
 fn setup_repo_dir(url: &str) -> Result<&str> {
     let last_dir_sep = url.rfind("/");
