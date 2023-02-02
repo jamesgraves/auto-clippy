@@ -5,9 +5,9 @@ authors = ["James Graves <james.c.graves.jr@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rusqlite = "0.23.1"
-git2 = "0.13"
-ispell = "0.3"
+rusqlite = "0.28.0"
+git2 = "0.16.1"
+ispell = "0.3.1"
 rustfix = { git = "https://github.com/rust-lang-nursery/rustfix", branch = "master" }
-structopt = "0.2"
-anyhow = "1.0"
+structopt = "0.3.26"
+anyhow = "1.0.68"
