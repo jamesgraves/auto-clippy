@@ -10,6 +10,16 @@ use structopt::StructOpt;
 use anyhow::{Result};
 
 #[derive(StructOpt, Debug)]
+/// Run cargo clippy on a set of Rust projects.
+///
+/// Download a set of Rust projects, possibly including dependencies, update
+/// as needed, then run Rust clippy (cargo clippy) on them to find any issues
+/// with style.
+/// 
+/// First add one or more Rust projects using the `add` subcommand.  You may
+/// recusively add the project's dependencies.
+/// 
+/// Next, with the `run` subcommand, run clippy on all the active projects.
 struct Opt {
 
     /// Print version number

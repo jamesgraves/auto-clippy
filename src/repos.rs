@@ -64,6 +64,17 @@ fn _add_urls(recursive: usize, urls: &[String], reference_count: isize) -> Resul
         if ! database::url_exists(url)? {
             database::add_repo(url, reference_count)?;
             database::set_repo_status(url, "new")?;
+        }
+        let repo_dir = format!("{}/{}", REPOS_DIR, &url);
+        if let Ok(metadata) = std::fs::metadata(repo_dir) {
+            if metadata.is_dir() {
+                // do fetch / pull
+                continue;
+            } else {
+                // Error
+            }
+        } else {
+
             count += 1;
             if let Some(idx) = url.rfind("/") {
                 let (repo_parent_dir, _) = url.split_at(idx);
@@ -78,8 +89,8 @@ fn _add_urls(recursive: usize, urls: &[String], reference_count: isize) -> Resul
                     println!("bare?");
                 }
             }
-
         }
+
 
         // let refcount = database::adjust_reference_count(url, reference_count)?;
         if recursive > 0 {
@@ -140,7 +151,7 @@ pub fn remove_urls(recursive: usize, urls: &[String]) -> Result<usize> {
 
 
 pub fn init_repos_dir() -> Result<()> {
-    std::fs::create_dir(REPOS_DIR)?;
+    std::fs::create_dir_all(REPOS_DIR)?;
     Ok(())
 }
 
